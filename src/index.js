@@ -1,9 +1,14 @@
 import app from "./app.js";
+import GlobalVariables from "./config.js";
 
 /* Function expression*/
 const main = () =>{
-    app.listen(app.get("port"))
-    console.log(`The company's web server is runing on port: ${app.get("port")}`);
+    //llamado a las variables locales modo de metodo
+    const env = new GlobalVariables();
+
+    //Creacion del puerto
+    app.listen(env.PORT);
+    console.log("Server running on port ", env.PORT);
 }
 
 main();

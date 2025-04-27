@@ -1,77 +1,103 @@
-import { pool } from "../config.js";
+import CategoriaModel from "../model/categoria.model.js";
 
-export const getCategorias = async (req, res) => {
+const model = new CategoriaModel();
+
+class CategoriaController {
+
+  // Obtener todas las categorías
+  getCategoriasController = async (req, res) => {
     try {
-        const [rows] = await pool.query('SELECT * FROM categorias')
-        res.json(rows)
+      const categorias = await model.getCategorias();
+      res.json(categorias);
     } catch (error) {
-        return res.status(500).json({
-            message: 'Something goes wrong'
-        })
+      res.status(500).json({
+        message: "Something went wrong",
+        error: error.message
+      });
     }
+  };
+
+  // Obtener una categoría por ID
+  getCategoriaIdController = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const categoria = await model.getCategoriaByID(id);
+
+      if (!categoria) {
+        return res.status(404).json({ message: "Categoria not found" });
+      }
+
+      res.json(categoria);
+    } catch (error) {
+      res.status(500).json({
+        message: "Something went wrong",
+        error: error.message
+      });
+    }
+  };
+
+  // Crear una nueva categoría
+  postCategoriaController = async (req, res) => {
+    try {
+      const { CategoriaNombre, Descripcion, Imagen } = req.body;
+
+      const result = await model.createCategoria({ CategoriaNombre, Descripcion, Imagen });
+
+      res.status(201).json({
+        CategoriaID: result.insertId,
+        CategoriaNombre,
+        Descripcion,
+        Imagen
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: "Something went wrong",
+        error: error.message
+      });
+    }
+  };
+
+  // Actualizar una categoría
+  updateCategoriaController = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { CategoriaNombre, Descripcion, Imagen } = req.body;
+
+      const result = await model.updateCategoria(id, { CategoriaNombre, Descripcion, Imagen });
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Categoria not found" });
+      }
+
+      const updatedCategoria = await model.getCategoriaByID(id);
+      res.json(updatedCategoria);
+    } catch (error) {
+      res.status(500).json({
+        message: "Something went wrong",
+        error: error.message
+      });
+    }
+  };
+
+  // Eliminar una categoría
+  deleteCategoriaController = async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const result = await model.deleteCategoria(id);
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Categoria not found" });
+      }
+
+      res.sendStatus(204); // Eliminado exitosamente
+    } catch (error) {
+      res.status(500).json({
+        message: "Something went wrong",
+        error: error.message
+      });
+    }
+  };
 }
 
-export const getCategoriasProductos = async (req, res) => {
-    try {
-        const [rows] = await pool.query('SELECT p.*, c.CategoriaNombre FROM productos p INNER JOIN categorias c ON p.CategoriaID = c.CategoriaID')
-        res.json(rows)
-    } catch (error) {
-        return res.status(500).json({
-            message: 'Something goes wrong'
-        })
-    }
-}
-
-//al poner VALUES(?, ?) le estoy diciendo que lo voy a reemplazar valores desde mi biblioteca
-//cuando hacemos una insercion, una cosulta, una actualizacion, un eliminar datos o cualquier tipo de operacion con la base de datos esto seimpre tiene que ser asyncrono 
-export const createClientes  = async (req, res) => {
-    try {
-        const {ClienteID, Compania, Contacto, Titulo, Direccion, Ciudad, Regiones, CodigoPostal, Pais, Telefono, Fax} = req.body
-        const [rows] = await pool.query('INSERT INTO clientes (ClienteID, Compania, Contacto, Titulo, Direccion, Ciudad, Regiones, CodigoPostal, Pais, Telefono, Fax) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [ClienteID, Compania, Contacto, Titulo, Direccion, Ciudad, Regiones, CodigoPostal, Pais, Telefono, Fax])
-        res.send({
-            id: rows.insertId,
-            name,
-            salary,
-        })
-    } catch (error) {
-        return res.status(500).json({
-            message: 'Something goes wrong'
-        })
-    }
-}
-
-export const deleteCategorias = async (req, res) => {
-    try {
-        const [result] = await pool.query('DELETE FROM categorias WHERE id = ?', [req.params.id])
-    if (result.affectedRows <=0) res.status(404).json({
-       message: 'categorias not found'
-    })
-    res.sendStatus(204)
-    } catch (error) {
-        return res.status(500).json({
-            message: 'Something goes wrong'
-        })
-    }
-}
-
-
-//el IFNULL me sirve para que si cambio un dato diferente a ese, este se mantenga con el anterior dato
-export const updatProductos = async (req, res) => {
-    try {
-        const {id} = req.params
-    const {ProductoID, ProductoNombre, ProveedorID, CategoriaID, CantidadPorUnidad, PrecioUnitario, UnidadesStock, UnidadesPedidas, NivelReorden, Discontinuado} = req.body
-
-    const [result] = await pool.query('UPDATE productos SET ProductoID = IFNULL(?, ProductoID), ProductoNombre = IFNULL(?, ProductoNombre), ProveedorID = IFNULL(?, ProveedorID), CategoriaID = IFNULL(?, CategoriaID), CantidadPorUnidad = IFNULL(?, CantidadPorUnidad), PrecioUnitario = IFNULL(?, PrecioUnitario), UnidadesStock = IFNULL(?, UnidadesStock), UnidadesPedidas = IFNULL(?, UnidadesPedidas), NivelReorden = IFNULL(?, NivelReorden), Discontinuado = IFNULL(?, Discontinuado) WHERE id = ?', [ProductoID, ProductoNombre, ProveedorID, CategoriaID, CantidadPorUnidad, PrecioUnitario, UnidadesStock, UnidadesPedidas, NivelReorden, Discontinuado, id])
-    if (result.affectedRows <=0) res.status(404).json({
-        message: 'productos not found'
-    })
-
-    const [rows] = await pool.query('SELECT * FROM productos WHERE id = ?', [id])
-    console.log(result)
-    res.json(rows[0])
-    } catch (error) {
-        return res.status(500).json({
-            message: 'Something goes wrong'
-        })
-    }
-}
+export default CategoriaController;

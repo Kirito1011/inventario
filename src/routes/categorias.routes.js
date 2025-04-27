@@ -1,14 +1,18 @@
 import { Router } from "express";
-import {getCategorias, createClientes, updatProductos, deleteCategorias} from "../controllers/categorias.controller.js";
+import categoriaController from "../controllers/categorias.controller.js";
 
 const router = Router();
+//creo un nuevo objeto de employeesController para poder usar sus funciones
+const controller = new categoriaController;
 
-router.get("/employees", getCategorias)
+router.get("/categorias", controller.getCategoriasController)
 
-router.post("/crearEmpleado", createClientes)
+router.get("/categorias/:id", controller.getCategoriaIdController)
 
-router.patch("/actualizarProducto/:id", updatProductos)
+router.post("/crearCategorias", controller.postCategoriaController)
 
-router.delete("/eliminarCategoria/:id", deleteCategorias)
+router.patch("/actualizarCategorias/:id", controller.updateCategoriaController)
+
+router.delete("/eliminarCategoria/:id", controller.deleteCategoriaController)
 
 export default router;
